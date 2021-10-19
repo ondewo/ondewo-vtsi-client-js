@@ -1,0 +1,35 @@
+{
+  "name": "@ondewo/ondewo-vtsi-client-js",
+  "version": "1.0.0",
+  "description": "Ondewo vtsi creation and handling client library for js",
+  "keywords": ["ondewo", "vtsi", "api", "client", "js", "grpc"],
+  "config" : { 
+    "libname" : "vtsi",
+    "compiler": "ondewo-js-proto-compiler",
+    "root": "ondewo-vtsi-api",
+    "entry": "ondewo",
+    "apiversion": "1.0.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "initialize": "git submodule update --init --recursive --remote",
+    "checkout-api": "cd src/$npm_package_config_root && git checkout $npm_package_config_apiversion && cd ../../",
+    "prebuild": "mv src/ondewo-vtsi-api/googleapis/google src/ondewo-vtsi-api/google",
+    "build": "npm run checkout-api && npm run build-only",
+    "postbuild": "mv src/ondewo-vtsi-api/google src/ondewo-vtsi-api/googleapis/google",
+    "debug": "docker run -it --entrypoint /bin/bash -v ${PWD}/src:/input-volume -v ${PWD}/src/..:/output-volume $npm_package_config_compiler",
+    "build-only": "docker run -it -v ${PWD}/src:/input-volume -v ${PWD}/src/../lib:/output-volume $npm_package_config_compiler $npm_package_config_libname $npm_package_config_root $npm_package_config_entry",
+    "publish-npm": "npm publish ../npm --access public",
+    "build-update": "npm run build-only && npm run start-example",
+    "start-example": "sudo cp lib/vtsi.js example/lib/vtsi.js && http-server example",
+    "example-link-lib": "sudo ln -s lib/vtsi.js example/lib/vtsi.js",
+    "build-sample": "docker run -it -v ${PWD}/src:/input-volume -v ${PWD}/src/../lib:/output-volume $npm_package_config_compiler vtsi ondewo-vtsi-api ondewo"
+  },
+  "author": "ONDEWO GmbH",
+  "homepage": "https://ondewo.com/",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "directory": "https://github.com/ondewo/ondewo-vtsi-client-js.git"
+  }
+}
