@@ -1,0 +1,15 @@
+{
+    "authorizationToken": "",
+    "asteriskHost": "",
+    "asteriskPort": "",
+    "nluHost": "",
+    "nluPort": "",
+    "s2tHost": "",
+    "s2tPort": "",
+    "t2sHost": "",
+    "t2sPort": "",
+    "sampleProjectId": "",
+    "sampleFirstName": "",
+    "sampleLastName": "",
+    "samplePhoneNumber": ""
+}
