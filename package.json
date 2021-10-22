@@ -21,7 +21,7 @@
     "build-only": "docker run -it -v ${PWD}/src:/input-volume -v ${PWD}/src/../lib:/output-volume $npm_package_config_compiler $npm_package_config_libname $npm_package_config_root $npm_package_config_entry",
     "publish-npm": "npm publish ../npm --access public",
     "build-update": "npm run build-only && npm run start-example",
-    "start-example": "sudo cp lib/vtsi.js example/lib/vtsi.js && http-server example",
+    "start-example": "mkdir -p example/lib && sudo cp lib/vtsi.js example/lib/vtsi.js && http-server example",
     "example-link-lib": "sudo ln -s lib/vtsi.js example/lib/vtsi.js",
     "build-sample": "docker run -it -v ${PWD}/src:/input-volume -v ${PWD}/src/../lib:/output-volume $npm_package_config_compiler vtsi ondewo-vtsi-api ondewo"
   },

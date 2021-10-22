@@ -11,27 +11,29 @@ runVTSIClientSample(endPoint, authMetaData);
 function runVTSIClientSample(endPoint, authMetaData){
 	const firstName = 'Philipp';
 	const lastName = 'Schweiger';
-	const phoneNumber = '+436605555555';
-	const callId = '8804ddf0-e66e-44b5-a8c7-2891fe1d3f94';
+	const phoneNumber = '+43660209XXXX';
+	const callId = uuidv4();
+	console.log("Generated call Id: " + callId);
 	const projectId = 'f1daa016-f997-4729-a5e3-0bbf0725b439';
 
 	const startCallInstanceRequest = new vtsi.StartCallInstanceRequest();
-	startCallInstanceRequest.phoneNumber = phoneNumber;
-	startCallInstanceRequest.callId = callId;
-	startCallInstanceRequest.sipSimVersion = '1.0.0';
-	startCallInstanceRequest.projectId = projectId;
-	startCallInstanceRequest.initText = '';
-	startCallInstanceRequest.sipPrefix = '';
-	startCallInstanceRequest.sipName = '';
-	startCallInstanceRequest.initialIntent = 'i.intro.hello';
+	startCallInstanceRequest.setPhoneNumber(phoneNumber);
+	startCallInstanceRequest.setCallId(callId);
+	startCallInstanceRequest.setSipSimVersion('1.0.0');
+	startCallInstanceRequest.setProjectId(projectId);
+	startCallInstanceRequest.setInitText('');
+	startCallInstanceRequest.setSipPrefix('');
+	startCallInstanceRequest.setSipName('');
+	startCallInstanceRequest.setInitialIntent('i.intro.hello');
 
 	const startCallContext = new vtsi.Context();
 	startCallContext.name = `projects/${projectId}/agent/sessions/${callId}/contexts/c-parameters`;
-	startCallContext.lifespanCount = 1000;
-	startCallContext.lifespanTime = 600;
-	startCallContext.parameters = new Map();
+	startCallContext.setLifespanCount(1000);
+	startCallContext.setLifespanTime(600);
 
-	const firstNameContextParameter = new vtsi.Context.Parameter();
+	//startCallContext.parametersMap = new Map();
+
+	/*const firstNameContextParameter = new vtsi.Context.Parameter();
 	firstNameContextParameter.name = '';
 	firstNameContextParameter.displayName = 'p.first_name';
 	firstNameContextParameter.value = firstName;
@@ -49,34 +51,34 @@ function runVTSIClientSample(endPoint, authMetaData){
 	phoneNumberContextParameter.value = phoneNumber;
 	phoneNumberContextParameter.valueOriginal = phoneNumber;
 	startCallContext.parameters['p.phone_number'] = phoneNumberContextParameter;
-	startCallInstanceRequest.context = startCallContext;
+	startCallInstanceRequest.setContext(startCallContext);*/
 
 	const asteriskConfig = new vtsi.ServiceConfig();
-	asteriskConfig.host = '192.168.1.111';
-	asteriskConfig.port = '5060';
-	asteriskConfig.serviceIdentifier = 'asterisk';
-	asteriskConfig.languageCode = 'en';
-	startCallInstanceRequest.asteriskConfig = asteriskConfig;
+	asteriskConfig.setHost('192.168.1.111');
+	asteriskConfig.setPort('5060');
+	asteriskConfig.setServiceIdentifier('asterisk');
+	asteriskConfig.setLanguageCode('de');
+	startCallInstanceRequest.setAsteriskConfig(asteriskConfig);
 
 	const caiConfig = new vtsi.ServiceConfig();
-	asteriskConfig.host = 'grpc-nlu-develop.ondewo.com';
-	asteriskConfig.port = '443';
-	asteriskConfig.serviceIdentifier = '';
-	asteriskConfig.languageCode = 'en';
-	startCallInstanceRequest.caiConfig = caiConfig;
+	caiConfig.setHost('grpc-nlu-develop.ondewo.com');
+	caiConfig.setPort('443');
+	caiConfig.setServiceIdentifier('');
+	caiConfig.setLanguageCode('de');
+	startCallInstanceRequest.setCaiConfig(caiConfig);
 
 	const sttConfig = new vtsi.ServiceConfig();
-	asteriskConfig.host = 'grpc-s2t.ondewo.com';
-	asteriskConfig.port = '443';
-	asteriskConfig.serviceIdentifier = 'ONDEWO';
-	asteriskConfig.languageCode = 'default_english';
-	startCallInstanceRequest.sttConfig = sttConfig;
+	sttConfig.setHost('grpc-s2t.ondewo.com');
+	sttConfig.setPort('443');
+	sttConfig.setServiceIdentifier('ONDEWO');
+	sttConfig.setLanguageCode('default_german');
+	startCallInstanceRequest.setSttConfig(sttConfig);
 
 	const ttsConfig = new vtsi.ServiceConfig();
-	asteriskConfig.host = 'grpc-t2s.ondewo.com';
-	asteriskConfig.port = '443';
-	asteriskConfig.serviceIdentifier = 'ONDEWO';
-	asteriskConfig.languageCode = 'changyee';
+	ttsConfig.setHost('grpc-t2s.ondewo.com');
+	ttsConfig.setPort('443');
+	ttsConfig.setServiceIdentifier('ONDEWO');
+	ttsConfig.setLanguageCode('moritz');
 	startCallInstanceRequest.ttsConfig = ttsConfig;
 
 	console.log(startCallInstanceRequest)
@@ -84,6 +86,7 @@ function runVTSIClientSample(endPoint, authMetaData){
 	const vtsiClient = createVTSIClient(endPoint);
 	vtsiClient.startCallInstance(startCallInstanceRequest, authMetaData)
 		.then(response => {
+			console.log(response);
 			if (response.success) {
 				console.log(`Starting a call was successful`);
 			} else {
