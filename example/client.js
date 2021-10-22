@@ -10,8 +10,8 @@ runVTSIClientSample(endPoint, authMetaData);
 
 function runVTSIClientSample(endPoint, authMetaData){
 	const firstName = 'Philipp';
-	const lastName = 'Schweiger';
-	const phoneNumber = '+43660209XXXX';
+	const lastName = ''
+	const phoneNumber = ''
 	const callId = uuidv4();
 	console.log("Generated call Id: " + callId);
 	const projectId = 'f1daa016-f997-4729-a5e3-0bbf0725b439';
