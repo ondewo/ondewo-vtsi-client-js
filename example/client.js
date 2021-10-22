@@ -1,6 +1,5 @@
 console.log('CLIENT SCRIPT -- start');
 
-const endPoint = 'https://webgrpc-vtsi.ondewo.com:443';
 const authMetaData = {
 	//Authorization: "<--Your authorization token-->",
 	Authorization: ''
@@ -12,7 +11,7 @@ function loadConfig(url){
 		if (this.readyState == 4 && this.status == 200) {
 			const config = JSON.parse(this.responseText);
 			console.log(config)
-			runVTSIClientSample(endPoint, authMetaData, config);
+			runVTSIClientSample(authMetaData, config);
 		}
 	};
 	resourceUrl = url + "/config.json"
@@ -24,7 +23,7 @@ const serverUrl = "http://127.0.0.1:8080"
 loadConfig(serverUrl)
 
 
-function runVTSIClientSample(endPoint, authMetaData, config){
+function runVTSIClientSample(authMetaData, config){
 	authMetaData.Authorization = config.authorizationToken;
 
 	const firstName = config.sampleFirstName;
@@ -114,6 +113,7 @@ function runVTSIClientSample(endPoint, authMetaData, config){
 
 	console.log(startCallInstanceRequest)
 
+	const endPoint = config.vtsiHost + ":" + config.vtsiPort;
 	const vtsiClient = createVTSIClient(endPoint);
 	testCall(startCallInstanceRequest, authMetaData);
 

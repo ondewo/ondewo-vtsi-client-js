@@ -1,5 +1,7 @@
 {
     "authorizationToken": "",
+    "vtsiHost": "",
+    "vtsiPort": "",
     "asteriskHost": "",
     "asteriskPort": "",
     "nluHost": "",
