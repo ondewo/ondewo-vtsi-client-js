@@ -45,34 +45,44 @@ function runVTSIClientSample(endPoint, authMetaData, config){
 	startCallInstanceRequest.setInitialIntent('i.intro.hello');
 
 	const startCallContext = new vtsi.Context();
-	startCallContext.name = `projects/${projectId}/agent/sessions/${callId}/contexts/c-parameters`;
+	startCallContext.setName(`projects/${projectId}/agent/sessions/${callId}/contexts/c-parameters`);
 	startCallContext.setLifespanCount(1000);
 	startCallContext.setLifespanTime(600);
 
-	//startCallContext.parametersMap = new Map();
-
+	const parametersMap = startCallContext.getParametersMap();
+	
 	const parameter1 = new vtsi.Context.Parameter();
+	parameter1.setName('');
+	parameter1.setDisplayName('p.first_name');
+	parameter1.setValue(firstName);
+	parameter1.setValueOriginal(firstName);
+	parametersMap.set(parameter1.getDisplayName(), parameter1)
+	//parametersMap[parameter1.getDisplayName()] = parameter1;
 
-	/*const firstNameContextParameter = new vtsi.Context.Parameter();
-	firstNameContextParameter.name = '';
-	firstNameContextParameter.displayName = 'p.first_name';
-	firstNameContextParameter.value = firstName;
-	firstNameContextParameter.valueOriginal = firstName;
-	startCallContext.parameters['p.first_name'] = firstNameContextParameter;
-	const lastNameContextParameter = new vtsi.Context.Parameter();
-	lastNameContextParameter.name = '';
-	lastNameContextParameter.displayName = 'p.last_name';
-	lastNameContextParameter.value = lastName;
-	lastNameContextParameter.valueOriginal = lastName;
-	startCallContext.parameters['p.last_name'] = lastNameContextParameter;
-	const phoneNumberContextParameter = new vtsi.Context.Parameter();
-	phoneNumberContextParameter.name = '';
-	phoneNumberContextParameter.displayName = 'p.phone_number';
-	phoneNumberContextParameter.value = phoneNumber;
-	phoneNumberContextParameter.valueOriginal = phoneNumber;
-	startCallContext.parameters['p.phone_number'] = phoneNumberContextParameter;*/
-	startCallInstanceRequest.setContextsList([startCallContext])
-	//startCallInstanceRequest.setContext(startCallContext);
+	const parameter2 = new vtsi.Context.Parameter();
+	parameter2.setName('');
+	parameter2.setDisplayName('p.last_name');
+	parameter2.setValue(lastName);
+	parameter2.setValueOriginal(lastName);
+	parametersMap.set(parameter2.getDisplayName(), parameter2)
+	//parametersMap[parameter2.getDisplayName()] = parameter2;
+
+	const parameter3 = new vtsi.Context.Parameter();
+	parameter3.setName('');
+	parameter3.setDisplayName('p.phone_number');
+	parameter3.setValue(phoneNumber);
+	parameter3.setValueOriginal(phoneNumber);
+	parametersMap.set(parameter3.getDisplayName(), parameter3);
+	//parametersMap[parameter3.getDisplayName()] = parameter3;
+
+	const contextsList = [];
+	contextsList.push(startCallContext)
+
+	console.log("contextsList:")
+	console.log(contextsList)
+	//startCallInstanceRequest.getContextsList();
+
+	startCallInstanceRequest.setContextsList(contextsList);
 
 	const asteriskConfig = new vtsi.ServiceConfig();
 	asteriskConfig.setHost(config.asteriskHost);
@@ -105,10 +115,13 @@ function runVTSIClientSample(endPoint, authMetaData, config){
 	console.log(startCallInstanceRequest)
 
 	const vtsiClient = createVTSIClient(endPoint);
-	vtsiClient.startCallInstance(startCallInstanceRequest, authMetaData)
+	testCall(startCallInstanceRequest, authMetaData);
+
+	function testCall(startCallInstanceRequest, authMetaData){
+		vtsiClient.startCallInstance(startCallInstanceRequest, authMetaData)
 		.then(response => {
 			console.log(response);
-			if (response.success) {
+			if (response.getSuccess()) {
 				console.log(`Starting a call was successful`);
 			} else {
 				console.log(`Starting a call was not successful`);
@@ -117,6 +130,7 @@ function runVTSIClientSample(endPoint, authMetaData, config){
 		.catch(error => {
 			console.log(`An error occured: ${error}`);
 		});
+	}
 
 	function createVTSIClient(host) {
 		const credentials = {};
