@@ -87,28 +87,28 @@ function runVTSIClientSample(authMetaData, config){
 	asteriskConfig.setHost(config.asteriskHost);
 	asteriskConfig.setPort(config.asteriskPort);
 	asteriskConfig.setServiceIdentifier('asterisk');
-	asteriskConfig.setLanguageCode('de');
+	asteriskConfig.setLanguageCode('en');
 	startCallInstanceRequest.setAsteriskConfig(asteriskConfig);
 
 	const caiConfig = new vtsi.ServiceConfig();
 	caiConfig.setHost(config.nluHost);
 	caiConfig.setPort(config.nluPort);
 	caiConfig.setServiceIdentifier('');
-	caiConfig.setLanguageCode('de');
+	caiConfig.setLanguageCode('en');
 	startCallInstanceRequest.setCaiConfig(caiConfig);
 
 	const sttConfig = new vtsi.ServiceConfig();
 	sttConfig.setHost(config.s2tHost);
 	sttConfig.setPort(config.s2tPort);
 	sttConfig.setServiceIdentifier('ONDEWO');
-	sttConfig.setLanguageCode('default_german');
+	sttConfig.setLanguageCode('general_english');
 	startCallInstanceRequest.setSttConfig(sttConfig);
 
 	const ttsConfig = new vtsi.ServiceConfig();
 	ttsConfig.setHost(config.t2sHost);
 	ttsConfig.setPort(config.t2sPort);
 	ttsConfig.setServiceIdentifier('ONDEWO');
-	ttsConfig.setLanguageCode('moritz');
+	ttsConfig.setLanguageCode('eric');
 	startCallInstanceRequest.setTtsConfig(ttsConfig);
 
 	console.log(startCallInstanceRequest)
@@ -118,6 +118,8 @@ function runVTSIClientSample(authMetaData, config){
 	testCall(startCallInstanceRequest, authMetaData);
 
 	function testCall(startCallInstanceRequest, authMetaData){
+		console.log(startCallInstanceRequest)
+
 		vtsiClient.startCallInstance(startCallInstanceRequest, authMetaData)
 		.then(response => {
 			console.log(response);
