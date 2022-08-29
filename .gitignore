@@ -1,3 +1,7 @@
 */lib/
 example/lib
-example/config.json
+.idea
+*.env
+node_modules
+npm
+.vscode
