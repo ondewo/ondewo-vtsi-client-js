@@ -18,7 +18,7 @@ export
 ONDEWO_VTSI_VERSION = 4.0.0
 
 VTSI_API_GIT_BRANCH=tags/4.0.0
-ONDEWO_PROTO_COMPILER_GIT_BRANCH=master
+ONDEWO_PROTO_COMPILER_GIT_BRANCH=tags/4.1.1
 ONDEWO_PROTO_COMPILER_DIR=ondewo-proto-compiler
 VTSI_APIS_DIR=src/ondewo-vtsi-api
 VTSI_PROTOS_DIR=${VTSI_APIS_DIR}/ondewo
@@ -65,6 +65,21 @@ help: ## Print usage info about help targets
 
 makefile_chapters: ## Shows all sections of Makefile
 	@echo `cat Makefile| grep "########################################################" -A 1 | grep -v "########################################################"`
+
+check_build: #Checks if all built proto-code is there
+	@rm -rf build_check.txt
+	@for proto in `find src/ondewo-vtsi-api/ondewo -iname "*.proto*"`; \
+	do \
+		cat $${proto} | grep import | grep "google/" | cut -d "\"" -f 2 | cut -d "." -f 1 >> build_check.txt; \
+		echo $${proto} | cut -d "/" -f 3-5 | cut -d "." -f 1 >> build_check.txt; \
+	done
+	@echo "`sort build_check.txt | uniq`" > build_check.txt
+	@for file in `cat build_check.txt`;\
+	do \
+		cat api/ondewo_vtsi_api.js | grep -q $${file};\
+		if test $$? != 0; then  echo "No Proto-Code for $${file} in api/ondewo_vtsi_api.js" & exit 1;fi \
+	done
+	@rm -rf build_check.txt
 
 ########################################################
 #       Repo Specific Make Targets
