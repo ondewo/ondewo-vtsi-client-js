@@ -1,6 +1,6 @@
 {
 	"name": "@ondewo/ondewo-vtsi-client-js",
-	"version": "4.0.0",
+	"version": "5.0.0",
 	"description": "Ondewo vtsi creation and handling client library for js",
 	"keywords": [
 		"ondewo",
