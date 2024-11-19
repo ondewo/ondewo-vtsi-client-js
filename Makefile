@@ -21,7 +21,7 @@ ONDEWO_PROTO_COMPILER_GIT_BRANCH=tags/5.2.0
 ONDEWO_PROTO_COMPILER_DIR=ondewo-proto-compiler
 VTSI_APIS_DIR=src/ondewo-vtsi-api
 VTSI_PROTOS_DIR=${VTSI_APIS_DIR}/ondewo
-GOOGLE_APIS_DIR=${VTSI_APIS_DIR}/googleapis
+GOOGLE_APIS_DIR=${VTSI_APIS_DIR}/google
 GOOGLE_PROTOS_DIR=${GOOGLE_APIS_DIR}/google
 GITHUB_GH_TOKEN?=
 NPM_AUTOMATION_TOKEN?=
@@ -241,7 +241,7 @@ check_out_correct_submodule_versions: ## Fetches all Submodules and checksout sp
 	git -C ${ONDEWO_PROTO_COMPILER_DIR} fetch --all
 	git -C ${ONDEWO_PROTO_COMPILER_DIR} checkout ${ONDEWO_PROTO_COMPILER_GIT_BRANCH}
 	make -C ${VTSI_APIS_DIR} build
-	cp -R ${VTSI_APIS_DIR}/googleapis/google ${VTSI_APIS_DIR}/google
+	cp -R ${VTSI_APIS_DIR}/google/google ${VTSI_APIS_DIR}/google
 	@echo "DONE checking out correct submodule versions."
 
 npm_run_build: ## Runs the build command in package.json
