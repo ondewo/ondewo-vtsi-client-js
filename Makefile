@@ -240,7 +240,6 @@ check_out_correct_submodule_versions: ## Fetches all Submodules and checksout sp
 	git -C ${ONDEWO_PROTO_COMPILER_DIR} fetch --all
 	git -C ${ONDEWO_PROTO_COMPILER_DIR} checkout ${ONDEWO_PROTO_COMPILER_GIT_BRANCH}
 	make -C ${VTSI_APIS_DIR} build
-	cp -R ${GOOGLE_PROTOS_DIR}/ ${VTSI_APIS_DIR}/google
 	@echo "DONE checking out correct submodule versions."
 
 npm_run_build: ## Runs the build command in package.json
