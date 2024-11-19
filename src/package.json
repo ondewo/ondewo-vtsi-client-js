@@ -1,6 +1,6 @@
 {
 	"name": "@ondewo/ondewo-vtsi-client-js",
-	"version": "5.0.0",
+	"version": "8.0.0",
 	"description": "ONDEWO Voip Telephone System Integration (VTSI) Client library for Js",
 	"author": "ONDEWO GmbH",
 	"homepage": "https://ondewo.com",
