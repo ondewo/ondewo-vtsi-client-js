@@ -1,6 +1,13 @@
 # Release History
 
 ***************** 
+## Release ONDEWO VTSI Js Client 8.2.0 
+ 
+### Improvements 
+ * Tracking API Version [8.2.0](https://github.com/ondewo/ondewo-vtsi-api/releases/tag/8.2.0) ( [Documentation](https://ondewo.github.io/ondewo-vtsi-api/) ) 
+
+
+***************** 
 ## Release ONDEWO VTSI Js Client 8.1.0 
  
 ### Improvements 

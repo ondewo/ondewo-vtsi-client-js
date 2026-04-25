@@ -1,6 +1,6 @@
 {
 	"name": "@ondewo/ondewo-vtsi-client-js",
-	"version": "8.1.0",
+	"version": "8.2.0",
 	"description": "ONDEWO Voip Telephone System Integration (VTSI) Client library for Js",
 	"author": "ONDEWO GmbH",
 	"homepage": "https://ondewo.com",
@@ -18,17 +18,17 @@
 		"directory": "https://github.com/ondewo/ondewo-vtsi-client-js.git"
 	},
 	"dependencies": {
-		"google-protobuf": "3.21.4",
+		"google-protobuf": "^3.21.4",
 		"grpc-web": "^1.5.0",
-		"webpack": "^5.96.1"
+		"webpack": "^5.99.9"
 	},
 	"devDependencies": {
-		"@eslint/eslintrc": "^3.2.0",
-		"@eslint/js": "^9.15.0",
-		"@typescript-eslint/eslint-plugin": "^8.15.0",
-		"eslint": "^9.15.0",
+		"@eslint/eslintrc": "^3.3.5",
+		"@eslint/js": "^9.39.4",
+		"@typescript-eslint/eslint-plugin": "^8.59.0",
+		"eslint": "^9.39.4",
 		"global": "^4.4.0",
 		"husky": "^9.1.7",
-		"prettier": "^3.3.3"
+		"prettier": "^3.8.3"
 	}
 }
