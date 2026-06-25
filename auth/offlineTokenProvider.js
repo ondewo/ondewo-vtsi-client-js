@@ -23,17 +23,86 @@
 
 'use strict';
 
-// Seconds of head-room subtracted from a token's `expires_in` so the refresh fires before the access
-// token actually lapses (covers clock skew + the round-trip to Keycloak).
+/**
+ * The minimal shape of an HTTP response consumed by {@link postTokenRequest}: a `Fetch`-like result
+ * exposing the 2xx flag, the numeric status, and a lazy text-body reader. Deliberately narrower than
+ * the DOM `Response` so any `fetch`-compatible implementation (or a test stub) satisfies it.
+ *
+ * @typedef {object} FetchResponse
+ * @property {boolean} ok
+ *   `true` when the HTTP status is in the 2xx range.
+ * @property {number} status
+ *   The numeric HTTP status code.
+ * @property {() => Promise<string>} text
+ *   Resolves to the raw response body as a string.
+ */
+
+/**
+ * A `fetch`-compatible function used to talk to the Keycloak token endpoint. Injectable so tests can
+ * supply a stub with no network access; defaults to `globalThis.fetch`.
+ *
+ * @typedef {(url: string, init: object) => Promise<FetchResponse>} FetchImpl
+ */
+
+/**
+ * The parsed JSON body of a successful Keycloak OIDC token response. Only the fields this helper reads
+ * are modelled; Keycloak returns additional fields (e.g. `token_type`, `scope`) that are ignored.
+ *
+ * @typedef {object} TokenResponse
+ * @property {string} access_token
+ *   The short-lived bearer access token. Always present (validated by {@link postTokenRequest}).
+ * @property {string} [refresh_token]
+ *   The offline refresh token. Present on the initial login and whenever Keycloak rotates it.
+ * @property {number} [expires_in]
+ *   The access token's lifetime in seconds, used to schedule the next background refresh.
+ */
+
+/**
+ * The options accepted by the {@link OfflineTokenProvider} constructor: the Keycloak coordinates plus
+ * optional bounded-lifetime and dependency-injection seams.
+ *
+ * @typedef {object} OfflineTokenProviderOptions
+ * @property {string} keycloakUrl
+ *   The Keycloak base URL (a trailing slash and an optional baked-in `/auth` path are tolerated).
+ * @property {string} realm
+ *   The Keycloak realm whose token endpoint is targeted.
+ * @property {string} clientId
+ *   The PUBLIC SDK client id (e.g. `ondewo-nlu-cai-sdk-public`); no client secret is sent.
+ * @property {number} [tokenExpirationInS]
+ *   Optional bound (seconds since login) after which the background refresh loop stops.
+ * @property {FetchImpl} [fetchImpl]
+ *   Optional `fetch` override; defaults to `globalThis.fetch`.
+ * @property {() => number} [nowInMs]
+ *   Optional clock returning epoch milliseconds; defaults to `Date.now`. Injectable for tests.
+ */
+
+/**
+ * The options accepted by {@link login}: every {@link OfflineTokenProviderOptions} field plus the ROPC
+ * credentials.
+ *
+ * @typedef {OfflineTokenProviderOptions & { username: string, password: string }} LoginOptions
+ */
+
+/**
+ * Seconds of head-room subtracted from a token's `expires_in` so the refresh fires before the access
+ * token actually lapses (covers clock skew + the round-trip to Keycloak).
+ *
+ * @type {number}
+ */
 const REFRESH_SKEW_IN_S = 30;
 
-// Lower bound for the scheduled refresh delay so a tiny/zero `expires_in` cannot spin a hot loop.
+/**
+ * Lower bound for the scheduled refresh delay so a tiny/zero `expires_in` cannot spin a hot loop.
+ *
+ * @type {number}
+ */
 const MIN_REFRESH_DELAY_IN_S = 1;
 
 /** Error raised on any token-endpoint or token-shape failure. */
 class TokenError extends Error {
 	/**
 	 * @param {string} message
+	 *   A human-readable description of the token-endpoint or token-shape failure.
 	 */
 	constructor(message) {
 		super(message);
@@ -46,8 +115,11 @@ class TokenError extends Error {
  * optional `/auth` relative path already baked into it.
  *
  * @param {string} keycloakUrl
+ *   The Keycloak base URL (any trailing slashes are stripped before composing the path).
  * @param {string} realm
+ *   The realm name; URL-encoded into the endpoint path.
  * @returns {string}
+ *   The fully-qualified `…/realms/<realm>/protocol/openid-connect/token` URL.
  */
 function buildTokenEndpoint(keycloakUrl, realm) {
 	const base = keycloakUrl.replace(/\/+$/, '');
@@ -59,9 +131,15 @@ function buildTokenEndpoint(keycloakUrl, realm) {
  * Raises TokenError on a non-2xx response or unparseable / access_token-less body.
  *
  * @param {string} tokenEndpoint
+ *   The realm token endpoint URL produced by {@link buildTokenEndpoint}.
  * @param {Record<string, string>} params
- * @param {(url: string, init: object) => Promise<{ ok: boolean, status: number, text: () => Promise<string> }>} fetchImpl
- * @returns {Promise<object>}
+ *   The form fields (e.g. `grant_type`, `client_id`, credentials) to URL-encode into the body.
+ * @param {FetchImpl} fetchImpl
+ *   The `fetch`-compatible function used to perform the request.
+ * @returns {Promise<TokenResponse>}
+ *   The parsed token response, guaranteed to carry a non-empty `access_token`.
+ * @throws {TokenError}
+ *   On a non-2xx status, a non-JSON body, or a body missing a string `access_token`.
  */
 async function postTokenRequest(tokenEndpoint, params, fetchImpl) {
 	const body = new URLSearchParams(params).toString();
@@ -96,25 +174,75 @@ async function postTokenRequest(tokenEndpoint, params, fetchImpl) {
  */
 class OfflineTokenProvider {
 	/**
-	 * @param {object} options
-	 * @param {string} options.keycloakUrl
-	 * @param {string} options.realm
-	 * @param {string} options.clientId
-	 * @param {number} [options.tokenExpirationInS]
-	 * @param {(url: string, init: object) => Promise<object>} [options.fetchImpl]
-	 * @param {() => number} [options.nowInMs]
+	 * @param {OfflineTokenProviderOptions} options
+	 *   The Keycloak coordinates plus optional bounded-lifetime and dependency-injection seams.
 	 */
 	constructor(options) {
+		/**
+		 * The realm token endpoint URL, composed once at construction.
+		 *
+		 * @type {string}
+		 */
 		this.tokenEndpoint = buildTokenEndpoint(options.keycloakUrl, options.realm);
+		/**
+		 * The PUBLIC SDK client id sent on every token request.
+		 *
+		 * @type {string}
+		 */
 		this.clientId = options.clientId;
+		/**
+		 * Optional bound (seconds since login) after which the refresh loop stops; `undefined` = unbounded.
+		 *
+		 * @type {number | undefined}
+		 */
 		this.tokenExpirationInS = options.tokenExpirationInS;
+		/**
+		 * The `fetch`-compatible function used for token requests.
+		 *
+		 * @type {FetchImpl}
+		 */
 		this.fetchImpl = options.fetchImpl !== undefined ? options.fetchImpl : globalThis.fetch;
+		/**
+		 * The clock returning epoch milliseconds, used to evaluate the bounded deadline.
+		 *
+		 * @type {() => number}
+		 */
 		this.nowInMs = options.nowInMs !== undefined ? options.nowInMs : Date.now;
+		/**
+		 * The current access token, or `null` before bootstrap / after the bounded loop lapses.
+		 *
+		 * @type {string | null}
+		 */
 		this.accessToken = null;
+		/**
+		 * The current offline refresh token, or `null` before bootstrap.
+		 *
+		 * @type {string | null}
+		 */
 		this.refreshToken = null;
+		/**
+		 * The armed refresh timer, or `null` when none is pending.
+		 *
+		 * @type {ReturnType<typeof setTimeout> | null}
+		 */
 		this.timer = null;
+		/**
+		 * Whether {@link OfflineTokenProvider#stop} has been called; gates all further refreshes.
+		 *
+		 * @type {boolean}
+		 */
 		this.stopped = false;
+		/**
+		 * The epoch-millisecond instant at which the bounded loop must stop, or `null` when unbounded.
+		 *
+		 * @type {number | null}
+		 */
 		this.deadlineInMs = null;
+		/**
+		 * The optional background-refresh error callback registered via {@link OfflineTokenProvider#onRefreshError}.
+		 *
+		 * @type {((error: unknown) => void) | null}
+		 */
 		this.onRefreshErrorHandler = null;
 	}
 
@@ -122,8 +250,13 @@ class OfflineTokenProvider {
 	 * Perform the one-time ROPC login and arm the first refresh. Awaited by {@link login}.
 	 *
 	 * @param {string} username
+	 *   The technical-user email for the `grant_type=password` exchange.
 	 * @param {string} password
+	 *   The technical-user password.
 	 * @returns {Promise<void>}
+	 *   Resolves once the access/refresh tokens are stored and the first refresh is armed.
+	 * @throws {TokenError}
+	 *   When the token endpoint fails or the response omits the offline `refresh_token`.
 	 */
 	async bootstrap(username, password) {
 		const tokenResponse = await postTokenRequest(
@@ -153,9 +286,14 @@ class OfflineTokenProvider {
 	}
 
 	/**
-	 * Exchange the offline refresh token for a fresh access token and re-arm the next refresh.
+	 * Exchange the offline refresh token for a fresh access token and re-arm the next refresh. A no-op
+	 * once stopped or once the bounded deadline has elapsed.
 	 *
 	 * @returns {Promise<void>}
+	 *   Resolves after the access token (and any rotated refresh token) is stored and the next refresh
+	 *   is armed; resolves immediately when stopped or past the deadline.
+	 * @throws {TokenError}
+	 *   When the token endpoint fails or returns a malformed body.
 	 */
 	async refresh() {
 		if (this.stopped) {
@@ -172,7 +310,8 @@ class OfflineTokenProvider {
 			{
 				grant_type: 'refresh_token',
 				client_id: this.clientId,
-				refresh_token: this.refreshToken
+				// `refresh()` only runs after `bootstrap()` has stored a non-null refresh token.
+				refresh_token: /** @type {string} */ (this.refreshToken)
 			},
 			this.fetchImpl
 		);
@@ -189,6 +328,8 @@ class OfflineTokenProvider {
 	 * `tokenExpirationInS` has elapsed (no further renewal -> access lapses -> re-login required).
 	 *
 	 * @param {number | undefined} expiresInRaw
+	 *   The access token's lifetime in seconds as reported by Keycloak; a non-positive or absent value
+	 *   falls back to {@link MIN_REFRESH_DELAY_IN_S}.
 	 * @returns {void}
 	 */
 	scheduleRefresh(expiresInRaw) {
@@ -226,6 +367,7 @@ class OfflineTokenProvider {
 	 * Register a callback invoked with the error of a failed background refresh (optional diagnostics).
 	 *
 	 * @param {(error: unknown) => void} handler
+	 *   The callback to invoke with the rejection of a failed background refresh.
 	 * @returns {void}
 	 */
 	onRefreshError(handler) {
@@ -245,6 +387,9 @@ class OfflineTokenProvider {
 	 * The value for an `Authorization` gRPC metadata header: `Bearer <access_token>`.
 	 *
 	 * @returns {string}
+	 *   The `Bearer <access_token>` header value.
+	 * @throws {TokenError}
+	 *   When no access token is available (login has not completed or the bounded loop has lapsed).
 	 */
 	getAuthorizationHeader() {
 		if (this.accessToken === null) {
@@ -271,21 +416,18 @@ class OfflineTokenProvider {
  * One-time ROPC + offline_access login against the PUBLIC SDK client, returning a live token provider
  * whose access token is auto-refreshed in the background until `tokenExpirationInS` elapses.
  *
- * @param {object} options
- * @param {string} options.keycloakUrl
- * @param {string} options.realm
- * @param {string} options.clientId
- * @param {string} options.username
- * @param {string} options.password
- * @param {number} [options.tokenExpirationInS]
- * @param {(url: string, init: object) => Promise<object>} [options.fetchImpl]
- * @param {() => number} [options.nowInMs]
+ * @param {LoginOptions} options
+ *   The Keycloak coordinates, ROPC credentials, and optional bounded-lifetime / injection seams.
  * @returns {Promise<OfflineTokenProvider>}
+ *   A bootstrapped provider whose access token is being auto-refreshed in the background.
+ * @throws {TokenError}
+ *   When `options` is missing, a required string option is absent/empty, or the login exchange fails.
  */
 async function login(options) {
 	if (options === undefined || options === null) {
 		throw new TokenError('login() requires an options object');
 	}
+	/** @type {(keyof LoginOptions)[]} */
 	const requiredKeys = ['keycloakUrl', 'realm', 'clientId', 'username', 'password'];
 	for (const key of requiredKeys) {
 		const value = options[key];
