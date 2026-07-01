@@ -261,7 +261,7 @@ runTestCase('a long deadline clamps the next refresh delay to the remaining wind
 		{ body: { access_token: 'access-2', refresh_token: 'offline-2', expires_in: 31 } }
 	]);
 
-	let fakeNowInMs = 2_000_000;
+	const fakeNowInMs = 2_000_000;
 	const nowInMs = () => fakeNowInMs;
 
 	mock.timers.enable({ apis: ['setTimeout'] });

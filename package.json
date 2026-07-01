@@ -18,7 +18,9 @@
 		"directory": "https://github.com/ondewo/ondewo-vtsi-client-js.git"
 	},
 	"scripts": {
-		"test": "c8 --check-coverage --lines 100 --branches 100 --functions 100 --include auth/offlineTokenProvider.js --exclude **/*.spec.js --reporter text node --test auth/offlineTokenProvider.spec.js"
+		"test:auth": "c8 --check-coverage --lines 100 --branches 100 --functions 100 --include auth/offlineTokenProvider.js --exclude '**/*.spec.js' --reporter text node --test auth/offlineTokenProvider.spec.js",
+		"test:examples": "node --test example/client.spec.js",
+		"test": "npm run test:auth && npm run test:examples"
 	},
 	"dependencies": {
 		"google-protobuf": "^3.21.4",

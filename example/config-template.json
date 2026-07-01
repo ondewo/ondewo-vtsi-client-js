@@ -1,17 +1,12 @@
 {
-	"authorizationToken": "",
-	"vtsiHost": "",
-	"vtsiPort": "",
-	"asteriskHost": "",
-	"asteriskPort": "",
+	"authorizationToken": "Bearer <your-keycloak-access-token>",
+	"vtsiHost": "https://localhost:8443",
+	"vtsiProjectName": "projects/<project_uuid>/project",
+	"sipSimVersion": "1.0.0",
+	"calleeId": "+43650123456",
 	"nluHost": "",
 	"nluPort": "",
-	"s2tHost": "",
-	"s2tPort": "",
-	"t2sHost": "",
-	"t2sPort": "",
-	"sampleProjectId": "",
-	"sampleFirstName": "",
-	"sampleLastName": "",
-	"samplePhoneNumber": ""
+	"agentName": "projects/<agent_uuid>/agent",
+	"languageCode": "en",
+	"initialIntent": "i.intro.hello"
 }
