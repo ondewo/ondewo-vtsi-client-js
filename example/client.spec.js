@@ -212,7 +212,8 @@ runTestCase('the offline-token provider yields a Bearer header the example forwa
 		Promise.resolve({
 			ok: true,
 			status: 200,
-			text: () => Promise.resolve(JSON.stringify({ access_token: 'kc-access', refresh_token: 'kc-offline', expires_in: 300 }))
+			text: () =>
+				Promise.resolve(JSON.stringify({ access_token: 'kc-access', refresh_token: 'kc-offline', expires_in: 300 }))
 		});
 	const provider = await login({
 		keycloakUrl: 'https://auth.example.com/auth',
