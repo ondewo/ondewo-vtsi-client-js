@@ -1,143 +1,196 @@
-console.log('CLIENT SCRIPT -- start');
+// Copyright 2021-2026 ONDEWO GmbH
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 
-const authMetaData = {
-    // Authorization: "<--Your authorization token-->",
-    Authorization: ''
-};
+// Minimal, framework-free usage example for the ONDEWO VTSI JS client.
+//
+// It demonstrates the three things every caller needs:
+//   1. obtain a bearer token (D18 Keycloak offline-token provider, see ../auth/offlineTokenProvider.js),
+//   2. construct the generated `Calls` gRPC-web client, and
+//   3. build a request, call a representative RPC, and handle the response.
+//
+// The generated stub namespace and the gRPC client are INJECTED (not imported) so the example logic
+// can be unit-tested with fakes and no live server (see client.spec.js). In the browser the stub
+// namespace is the global `ondewo_vtsi_api` exposed by api/ondewo_vtsi_api.min.js; the client class is
+// `ondewo_vtsi_api.CallsPromiseClient`.
 
-function loadConfig(url) {
-    const xmlhttp = new XMLHttpRequest(); // Use const for XMLHttpRequest
-    xmlhttp.onreadystatechange = function () {
-        if (this.readyState === 4 && this.status === 200) { // Use strict equality
-            const config = JSON.parse(this.responseText);
-            console.log(config);
-            runVTSIClientSample(authMetaData, config);
-        }
-    };
+'use strict';
 
-    const resourceUrl = `${url}/config.json`; // Use const for resourceUrl
-    xmlhttp.open('GET', resourceUrl, true);
-    xmlhttp.send();
+const { login } = require('../auth/offlineTokenProvider');
+
+/**
+ * Build a `StartCallerRequest` for an outbound call using the generated VTSI message classes.
+ *
+ * @param {any} vtsiApi
+ *   The generated stub namespace (browser global `ondewo_vtsi_api`); injected so tests can supply fakes.
+ * @param {{
+ *   vtsiProjectName: string,
+ *   sipSimVersion: string,
+ *   calleeId: string,
+ *   nluHost: string,
+ *   nluPort: number,
+ *   agentName: string,
+ *   languageCode: string,
+ *   initialIntent: string
+ * }} params
+ *   The call parameters: the VTSI project, the SIP caller coordinates, and the NLU service config.
+ * @returns {any}
+ *   A populated `StartCallerRequest` ready to pass to {@link startCaller}.
+ */
+function buildStartCallerRequest(vtsiApi, params) {
+	const request = new vtsiApi.StartCallerRequest();
+	request.setVtsiProjectName(params.vtsiProjectName);
+
+	const sipBaseConfig = new vtsiApi.SipBaseConfig();
+	sipBaseConfig.setSipSimVersion(params.sipSimVersion);
+
+	const sipCallerConfig = new vtsiApi.SipCallerConfig();
+	sipCallerConfig.setSipBaseConfig(sipBaseConfig);
+	sipCallerConfig.setCalleeId(params.calleeId);
+	request.setSipCallerConfig(sipCallerConfig);
+
+	const nluBaseConfig = new vtsiApi.BaseServiceConfig();
+	nluBaseConfig.setHost(params.nluHost);
+	nluBaseConfig.setPort(params.nluPort);
+
+	const nluVtsiConfig = new vtsiApi.NluVtsiConfig();
+	nluVtsiConfig.setNluBaseConfig(nluBaseConfig);
+	nluVtsiConfig.setAgentName(params.agentName);
+	nluVtsiConfig.setLanguageCode(params.languageCode);
+	nluVtsiConfig.setInitialIntent(params.initialIntent);
+
+	const commonServicesConfig = new vtsiApi.CommonServicesConfig();
+	commonServicesConfig.setNluVtsiConfig(nluVtsiConfig);
+	request.setCommonServicesConfig(commonServicesConfig);
+
+	return request;
 }
 
-const serverUrl = 'http://127.0.0.1:8080';
-loadConfig(serverUrl);
-
-function runVTSIClientSample(authMetaData, config) {
-    authMetaData.Authorization = config.authorizationToken;
-
-    const firstName = config.sampleFirstName;
-    const lastName = config.sampleLastName;
-    const phoneNumber = config.samplePhoneNumber;
-    const callId = uuidv4(); // Use the uuidv4 function from the included library
-    console.log('Generated call Id: ' + callId);
-    const projectId = config.sampleProjectId;
-
-    const startCallInstanceRequest = new vtsi.StartCallInstanceRequest(); // Use the vtsi library
-    startCallInstanceRequest.setPhoneNumber(phoneNumber);
-    startCallInstanceRequest.setCallId(callId);
-    startCallInstanceRequest.setSipSimVersion('1.0.0');
-    startCallInstanceRequest.setProjectId(projectId);
-    startCallInstanceRequest.setInitText('');
-    startCallInstanceRequest.setSipPrefix('');
-    startCallInstanceRequest.setSipName('');
-    startCallInstanceRequest.setInitialIntent('i.intro.hello');
-
-    const startCallContext = new vtsi.Context(); // Use the vtsi library
-    startCallContext.setName(`projects/${projectId}/agent/sessions/${callId}/contexts/c-parameters`);
-    startCallContext.setLifespanCount(1000);
-    startCallContext.setLifespanTime(600);
-
-    const parametersMap = startCallContext.getParametersMap();
-
-    const parameter1 = new vtsi.Context.Parameter(); // Use the vtsi library
-    parameter1.setName('');
-    parameter1.setDisplayName('p.first_name');
-    parameter1.setValue(firstName);
-    parameter1.setValueOriginal(firstName);
-    parametersMap.set(parameter1.getDisplayName(), parameter1);
-
-    const parameter2 = new vtsi.Context.Parameter(); // Use the vtsi library
-    parameter2.setName('');
-    parameter2.setDisplayName('p.last_name');
-    parameter2.setValue(lastName);
-    parameter2.setValueOriginal(lastName);
-    parametersMap.set(parameter2.getDisplayName(), parameter2);
-
-    const parameter3 = new vtsi.Context.Parameter(); // Use the vtsi library
-    parameter3.setName('');
-    parameter3.setDisplayName('p.phone_number');
-    parameter3.setValue(phoneNumber);
-    parameter3.setValueOriginal(phoneNumber);
-    parametersMap.set(parameter3.getDisplayName(), parameter3);
-
-    const contextsList = [];
-    contextsList.push(startCallContext);
-
-    console.log('contextsList:');
-    console.log(contextsList);
-
-    startCallInstanceRequest.setContextsList(contextsList);
-
-    const asteriskConfig = new vtsi.ServiceConfig(); // Use the vtsi library
-    asteriskConfig.setHost(config.asteriskHost);
-    asteriskConfig.setPort(config.asteriskPort);
-    asteriskConfig.setServiceIdentifier('asterisk');
-    asteriskConfig.setLanguageCode('en');
-    startCallInstanceRequest.setAsteriskConfig(asteriskConfig);
-
-    const caiConfig = new vtsi.ServiceConfig(); // Use the vtsi library
-    caiConfig.setHost(config.nluHost);
-    caiConfig.setPort(config.nluPort);
-    caiConfig.setServiceIdentifier('');
-    caiConfig.setLanguageCode('en');
-    startCallInstanceRequest.setCaiConfig(caiConfig);
-
-    const sttConfig = new vtsi.ServiceConfig(); // Use the vtsi library
-    sttConfig.setHost(config.s2tHost);
-    sttConfig.setPort(config.s2tPort);
-    sttConfig.setServiceIdentifier('ONDEWO');
-    sttConfig.setLanguageCode('general_english');
-    startCallInstanceRequest.setSttConfig(sttConfig);
-
-    const ttsConfig = new vtsi.ServiceConfig(); // Use the vtsi library
-    ttsConfig.setHost(config.t2sHost);
-    ttsConfig.setPort(config.t2sPort);
-    ttsConfig.setServiceIdentifier('ONDEWO');
-    ttsConfig.setLanguageCode('eric');
-    startCallInstanceRequest.setTtsConfig(ttsConfig);
-
-    console.log(startCallInstanceRequest);
-
-    const endPoint = `${config.vtsiHost}:${config.vtsiPort}`;
-    const vtsiClient = createVTSIClient(endPoint);
-    testCall(startCallInstanceRequest, authMetaData);
-
-    function testCall(startCallInstanceRequest, authMetaData) {
-        console.log(startCallInstanceRequest);
-
-        vtsiClient
-            .startCallInstance(startCallInstanceRequest, authMetaData)
-            .then((response) => {
-                console.log(response);
-                if (response.getSuccess()) {
-                    console.log(`Starting a call was successful`);
-                } else {
-                    console.log(`Starting a call was not successful`);
-                }
-            })
-            .catch((error) => {
-                console.log(`An error occurred: ${error}`);
-            });
-    }
-
-    function createVTSIClient(host) {
-        const credentials = {};
-        const clientOptions = {
-            withCredentials: false,
-            suppressCorsPreflight: false
-        };
-
-        return new vtsi.VoipSessionsPromiseClient(host, credentials, clientOptions); // Use the vtsi library
-    }
+/**
+ * Start an outbound caller and return the created `Caller`, forwarding the bearer token as gRPC metadata.
+ *
+ * @param {any} client
+ *   A `CallsPromiseClient` (or a test fake exposing `startCaller`).
+ * @param {any} request
+ *   The `StartCallerRequest` produced by {@link buildStartCallerRequest}.
+ * @param {string} authorization
+ *   The `Authorization` header value (`Bearer <token>`) from the offline-token provider.
+ * @returns {Promise<any>}
+ *   The started `Caller` from the response.
+ * @throws {Error}
+ *   When the response carries a non-empty `error_message`.
+ */
+async function startCaller(client, request, authorization) {
+	const response = await client.startCaller(request, { Authorization: authorization });
+	const errorMessage = response.getErrorMessage();
+	if (errorMessage) {
+		throw new Error(`StartCaller failed: ${errorMessage}`);
+	}
+	return response.getCaller();
 }
+
+/**
+ * Build a `ListCallsRequest` scoped to a VTSI project.
+ *
+ * @param {any} vtsiApi
+ *   The generated stub namespace (browser global `ondewo_vtsi_api`); injected so tests can supply fakes.
+ * @param {{ vtsiProjectName: string }} params
+ *   The VTSI project whose calls should be listed.
+ * @returns {any}
+ *   A populated `ListCallsRequest` ready to pass to {@link listCalls}.
+ */
+function buildListCallsRequest(vtsiApi, params) {
+	const request = new vtsiApi.ListCallsRequest();
+	request.setVtsiProjectName(params.vtsiProjectName);
+	return request;
+}
+
+/**
+ * List the calls of a VTSI project, forwarding the bearer token as gRPC metadata.
+ *
+ * @param {any} client
+ *   A `CallsPromiseClient` (or a test fake exposing `listCalls`).
+ * @param {any} request
+ *   The `ListCallsRequest` produced by {@link buildListCallsRequest}.
+ * @param {string} authorization
+ *   The `Authorization` header value (`Bearer <token>`) from the offline-token provider.
+ * @returns {Promise<any[]>}
+ *   The `Call` records returned by the server.
+ */
+async function listCalls(client, request, authorization) {
+	const response = await client.listCalls(request, { Authorization: authorization });
+	return response.getCallsList();
+}
+
+/**
+ * Live wiring for the example: log in to Keycloak, construct the client, start a caller, list the calls.
+ *
+ * Runnable in a browser where `ondewo_vtsi_api` is a global (loaded from api/ondewo_vtsi_api.min.js). The
+ * Keycloak coordinates and call parameters are read from environment variables. This function talks to a
+ * real server and is therefore NOT exercised by the unit tests -- those drive the exported helpers above
+ * with fakes instead.
+ *
+ * @returns {Promise<void>}
+ *   Resolves once the caller has been started and the calls have been listed.
+ */
+async function main() {
+	const vtsiApi = globalThis.ondewo_vtsi_api;
+	if (vtsiApi === undefined) {
+		throw new Error('The generated stub namespace `ondewo_vtsi_api` is not available on globalThis');
+	}
+
+	const provider = await login({
+		keycloakUrl: process.env.ONDEWO_KEYCLOAK_URL,
+		realm: process.env.ONDEWO_KEYCLOAK_REALM,
+		clientId: process.env.ONDEWO_KEYCLOAK_CLIENT_ID,
+		username: process.env.ONDEWO_KEYCLOAK_USERNAME,
+		password: process.env.ONDEWO_KEYCLOAK_PASSWORD
+	});
+
+	try {
+		const authorization = provider.getAuthorizationHeader();
+		const endpoint = `${process.env.ONDEWO_VTSI_HOST}:${process.env.ONDEWO_VTSI_PORT}`;
+		const client = new vtsiApi.CallsPromiseClient(endpoint, null, { withCredentials: false });
+
+		const vtsiProjectName = process.env.ONDEWO_VTSI_PROJECT_NAME;
+
+		const startRequest = buildStartCallerRequest(vtsiApi, {
+			vtsiProjectName,
+			sipSimVersion: process.env.ONDEWO_SIP_SIM_VERSION,
+			calleeId: process.env.ONDEWO_CALLEE_ID,
+			nluHost: process.env.ONDEWO_NLU_HOST,
+			nluPort: Number(process.env.ONDEWO_NLU_PORT),
+			agentName: process.env.ONDEWO_NLU_AGENT_NAME,
+			languageCode: process.env.ONDEWO_NLU_LANGUAGE_CODE,
+			initialIntent: process.env.ONDEWO_NLU_INITIAL_INTENT
+		});
+		const caller = await startCaller(client, startRequest, authorization);
+		console.log(`Started caller: ${caller.getName()}`);
+
+		const listRequest = buildListCallsRequest(vtsiApi, { vtsiProjectName });
+		const calls = await listCalls(client, listRequest, authorization);
+		console.log(`Project has ${calls.length} call(s)`);
+	} finally {
+		provider.stop();
+	}
+}
+
+if (require.main === module) {
+	main().catch((error) => {
+		console.error(error);
+		process.exitCode = 1;
+	});
+}
+
+module.exports = { buildStartCallerRequest, startCaller, buildListCallsRequest, listCalls, main };

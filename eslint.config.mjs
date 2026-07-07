@@ -13,22 +13,36 @@ const compat = new FlatCompat({
 
 export default [
 	{
-		ignores: ['**/api/', 'src/ondewo-vtsi-api', '**/ondewo-proto-compiler']
+		ignores: [
+			'**/api/',
+			'src/ondewo-vtsi-api',
+			'**/ondewo-proto-compiler',
+			'**/*.mjs',
+			'npm/',
+			'dist/',
+			'.test-build/',
+			'.test-build-examples/',
+			'auth/*.js',
+			'auth/*.d.ts'
+		]
 	},
 	{
 		files: ['**/*.js'], // Target all JavaScript files
 		languageOptions: {
 			globals: {
-				// Add any global variables you want to recognize
-				window: true,
-				document: true,
-				console: true,
-				XMLHttpRequest: true,
-				uuidv4: true,
-				vtsi: true
+				// The hand-written sources (auth/*.js, example/*.js) are CommonJS run on Node.
+				require: 'readonly',
+				module: 'writable',
+				exports: 'writable',
+				process: 'readonly',
+				console: 'readonly',
+				globalThis: 'readonly',
+				setTimeout: 'readonly',
+				clearTimeout: 'readonly',
+				URLSearchParams: 'readonly'
 			},
-			ecmaVersion: 2020, // Set ECMAScript version
-			sourceType: 'module' // If using ES modules
+			ecmaVersion: 2022, // Set ECMAScript version (numeric separators, top-level features)
+			sourceType: 'commonjs' // The hand-written sources use require()/module.exports
 		},
 		rules: {
 			...js.configs.recommended.rules,
