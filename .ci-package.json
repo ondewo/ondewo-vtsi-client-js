@@ -1,0 +1,11 @@
+{
+  "description": "ONDEWO Voip Telephone System Integration (VTSI) Client library for Js",
+  "scripts": {
+    "test:auth": "c8 --check-coverage --lines 100 --branches 100 --functions 100 --include auth/offlineTokenProvider.js --exclude '**/*.spec.js' --reporter text node --test auth/offlineTokenProvider.spec.js",
+    "test:examples": "node --test example/client.spec.js",
+    "test": "npm run test:auth && npm run test:examples"
+  },
+  "devDependencies": {
+    "c8": "^11.0.0"
+  }
+}
