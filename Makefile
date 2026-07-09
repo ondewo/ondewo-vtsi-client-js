@@ -14,7 +14,7 @@ export
 # 		Variables
 ########################################################
 
-ONDEWO_VTSI_VERSION = 8.2.0
+ONDEWO_VTSI_VERSION=8.2.0
 
 VTSI_API_GIT_BRANCH=OND211-2418-add-keycloak-for-2-fa
 ONDEWO_PROTO_COMPILER_GIT_BRANCH=tags/5.10.0
