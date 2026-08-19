@@ -22,10 +22,10 @@ config:
   # Auto-fix would strip them and break the release, so keep them.
   MD053: false
 globs:
-  - "*.md"
+  - '*.md'
 ignores:
-  - "api/**"
-  - "src/ondewo-vtsi-api/**"
-  - "ondewo-proto-compiler/**"
-  - "node_modules/**"
-  - ".venv/**"
+  - 'api/**'
+  - 'src/ondewo-vtsi-api/**'
+  - 'ondewo-proto-compiler/**'
+  - 'node_modules/**'
+  - '.venv/**'

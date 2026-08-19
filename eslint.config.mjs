@@ -30,8 +30,9 @@ export default [
 		files: ['**/*.js'], // Target all JavaScript files
 		languageOptions: {
 			globals: {
-				// The hand-written sources (auth/*.js, example/*.js) are CommonJS run on Node.
+				// The hand-written sources (auth/*.js, example/*.js, tests/*.js) are CommonJS run on Node.
 				require: 'readonly',
+				__dirname: 'readonly',
 				module: 'writable',
 				exports: 'writable',
 				process: 'readonly',
