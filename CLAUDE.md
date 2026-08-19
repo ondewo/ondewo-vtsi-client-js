@@ -113,6 +113,18 @@ The proto-compiler codegen (`cd src && npm run build`, whose output-volume is th
 - **Runtime deps the shipped auth helper needs (e.g. `undici`) must be declared in `src/package.json`** (the codegen source of truth) — otherwise the codegen strips them from root and the published package is missing them.
 - The `generate` script uses `docker run` **without `-it`** (a TTY-enabled container breaks the non-interactive release).
 
+## `optional` proto3 scalars: ask `has…()`, never the getter
+
+`AsteriskConfigs.asterisk_version` is the first field here declared `optional string`. The keyword compiles to a synthetic one-member oneof, and the jspb generator turns that into a `hasX()` / `clearX()` pair plus a getter that still returns `''` when the field is absent. **The getter cannot distinguish "unset" from "explicitly empty"**, and for this field the two are different requests: unset means "use the server's `ONDEWO_VTSI_ASTERISK_IMAGE_TAG` default", the empty string is rejected with `INVALID_ARGUMENT`.
+
+`tests/asteriskVersion.spec.*` pins both directions, including a premise test that uses `asteriskPort` — the plain proto3 scalar one field number below, which gets NO `has`/`clear` pair — as the control. If the `optional` keyword is ever dropped upstream, `asteriskVersion` joins that column and the suite fails loudly instead of quietly asserting nothing.
+
+## The two commit-msg hooks must run in this order
+
+`.pre-commit-config.yaml` lists `conventional-pre-commit` **before** `giticket`, and the order is the whole point. pre-commit runs hooks in file order, and `giticket` rewrites the subject to `[OND211-2418] <subject>`, which is not a valid Conventional Commit. With `giticket` first the validator is handed the prefix the other hook just added and rejects it, so **no conforming commit message exists at all** — one hook failing on the other hook's output. The only escapes were `--no-verify` or renaming the branch away from its ticket, and this repo's history shows the result: subjects that carry no ticket prefix at all.
+
+This repo had the wrong order until the `asterisk_version` regeneration commit fixed it. Type the plain subject (`feat(vtsi): …`), let the validator see exactly that, and let `giticket` decorate it afterwards. Never write the `[TICKET]` prefix yourself — that yields `[OND211-2418] [OND211-2418] …`.
+
 ## Pre-commit (chained into husky) + the release gotchas
 
 This repo now runs the pre-commit framework (markdownlint-cli2, pre-commit-hooks, giticket, conventional-commit) **alongside** husky's eslint/prettier. Hard-won rules:
