@@ -14,8 +14,7 @@ export
 # 		Variables
 ########################################################
 
-ONDEWO_VTSI_VERSION=8.3.0
-
+ONDEWO_VTSI_VERSION=8.3.1
 VTSI_API_GIT_BRANCH=OND211-2418-add-keycloak-for-2-fa
 # Must name the tag the committed ondewo-proto-compiler submodule points at, otherwise
 # check_out_correct_submodule_versions checks the submodule BACK to the older tag.
