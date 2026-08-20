@@ -1,6 +1,6 @@
 {
   "name": "@ondewo/ondewo-vtsi-client-js",
-  "version": "8.2.0",
+  "version": "8.3.0",
   "description": "ONDEWO Voip Telephone System Integration (VTSI) Client library for Js",
   "author": "ONDEWO GmbH",
   "homepage": "https://ondewo.com",
@@ -20,7 +20,8 @@
   "scripts": {
     "test:auth": "c8 --check-coverage --lines 100 --branches 100 --functions 100 --include auth/offlineTokenProvider.js --exclude '**/*.spec.js' --reporter text node --test auth/offlineTokenProvider.spec.js",
     "test:examples": "node --test example/client.spec.js",
-    "test": "npm run test:auth && npm run test:examples"
+    "test:protos": "node --test tests/asteriskVersion.spec.js",
+    "test": "npm run test:auth && npm run test:examples && npm run test:protos"
   },
   "dependencies": {
     "google-protobuf": "^3.21.4",
