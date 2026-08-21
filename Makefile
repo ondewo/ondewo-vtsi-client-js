@@ -30,7 +30,7 @@ IMAGE_UTILS_NAME=ondewo-vtsi-client-utils-js:${ONDEWO_VTSI_VERSION}
 PRETTIER_WRITE?=
 
 CURRENT_RELEASE_NOTES=`cat RELEASE.md \
-	| perl -ne 'print if /Release ONDEWO VTSI Js Client ${ONDEWO_VTSI_VERSION}/../\*\*/'`
+	| perl -ne 'print if /Release ONDEWO VTSI Js Client ${ONDEWO_VTSI_VERSION}/../^\*{5}/'`
 
 GH_REPO="https://github.com/ondewo/ondewo-vtsi-client-js"
 DEVOPS_ACCOUNT_GIT="ondewo-devops-accounts"
