@@ -13,15 +13,23 @@
     "js",
     "grpc"
   ],
+  "scripts": {
+    "test": "npm run test:auth && npm run test:examples && npm run test:protos",
+    "initialize": "git submodule update --init --recursive --remote",
+    "build": "docker run -v ${PWD}:/input-volume -v ${PWD}/../api:/output-volume ondewo-js-proto-compiler ondewo-vtsi-api ondewo-vtsi-api ondewo",
+    "debug": "docker run --entrypoint /bin/bash -v ${PWD}/src:/input-volume -v ${PWD}/src/..:/output-volume $npm_package_config_compiler",
+    "publish-npm": "npm publish ../npm --access public",
+    "build-update": "npm run build-only && npm run start-example",
+    "start-example": "sudo cp lib/vtsi.js example/lib/vtsi.js && http-server example",
+    "example-link-lib": "sudo ln -s lib/vtsi.js example/lib/vtsi.js",
+    "build-sample": "docker run -v ${PWD}/src:/input-volume -v ${PWD}/src/../api:/output-volume $npm_package_config_compiler vtsi ondewo-vtsi-api ondewo-vtsi-api ondewo",
+    "test:auth": "c8 --check-coverage --lines 100 --branches 100 --functions 100 --include auth/offlineTokenProvider.js --exclude '**/*.spec.js' --reporter text node --test auth/offlineTokenProvider.spec.js",
+    "test:examples": "node --test example/client.spec.js",
+    "test:protos": "node --test tests/asteriskVersion.spec.js"
+  },
   "repository": {
     "type": "git",
     "directory": "https://github.com/ondewo/ondewo-vtsi-client-js.git"
-  },
-  "scripts": {
-    "test:auth": "c8 --check-coverage --lines 100 --branches 100 --functions 100 --include auth/offlineTokenProvider.js --exclude '**/*.spec.js' --reporter text node --test auth/offlineTokenProvider.spec.js",
-    "test:examples": "node --test example/client.spec.js",
-    "test:protos": "node --test tests/asteriskVersion.spec.js",
-    "test": "npm run test:auth && npm run test:examples && npm run test:protos"
   },
   "dependencies": {
     "google-protobuf": "^3.21.4",
@@ -33,14 +41,14 @@
     "webpack-merge": "^6.0.1"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.5",
-    "@eslint/js": "^9.39.4",
-    "@typescript-eslint/eslint-plugin": "^8.62.1",
+    "@eslint/eslintrc": "^3.3.6",
+    "@eslint/js": "^9.39.5",
+    "@typescript-eslint/eslint-plugin": "^8.67.0",
     "c8": "^11.0.0",
-    "eslint": "^9.39.4",
+    "dotenv": "^16.4.5",
+    "eslint": "^9.39.5",
     "global": "^4.4.0",
     "husky": "^9.1.7",
-    "prettier": "^3.9.4",
-    "dotenv": "^16.4.5"
+    "prettier": "^3.9.6"
   }
 }
