@@ -2,6 +2,25 @@
 
 *****************
 
+## Release ONDEWO VTSI Js Client 8.7.0
+
+### Improvements
+
+* Built against [ondewo-vtsi-api 8.7.0](https://github.com/ondewo/ondewo-vtsi-api/releases/tag/8.7.0),
+  which re-vendors [ondewo-nlu-api 7.1.0](https://github.com/ondewo/ondewo-nlu-api/releases/tag/7.1.0)
+  (was 7.0.0) and [ondewo-s2t-api 7.5.0](https://github.com/ondewo/ondewo-s2t-api/releases/tag/7.5.0)
+  (was 7.4.0). `ondewo/vtsi/**` is unchanged in that API release, so the VTSI service surface is
+  identical and this client stays wire-compatible with 8.6.0.
+* What the re-exported surface gains: `speech-to-text.proto` adds the `VadMethod` and `TsdMethod`
+  enums and the `Silero` and `WespeakerTsd` messages (voice-activity and turn-shift detection
+  configuration); `rag.proto` adds `RagCrawlerIncrementalConfig`.
+* `RagCrawlerFilters` re-declares four fields as `[deprecated = true]` -- `allow_internal_links`,
+  `allow_social_media_links`, `allowed_paths` and `disallowed_paths`. Every field number, name and
+  type is preserved and no number is reused, so nothing on the wire changes; the two path lists are
+  superseded by `allowed_regex` / `disallowed_regex`.
+
+*****************
+
 ## Release ONDEWO VTSI Js Client 8.6.0
 
 ### Improvements

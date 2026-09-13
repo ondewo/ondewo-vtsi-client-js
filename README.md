@@ -80,7 +80,6 @@ TODO after PR merge:
 
   ```shell
   git checkout master
-
   ```
 
 - pull newest state
@@ -96,7 +95,6 @@ TODO after PR merge:
   ## Release ONDEWO VTSI Js Client X.X.X    <----- Beginning of Notes
 
   ...<NOTES>...
-
 
   *****************                             <----- End of Notes
   ```

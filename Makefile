@@ -14,9 +14,9 @@ export
 # 		Variables
 ########################################################
 
-ONDEWO_VTSI_VERSION=8.6.0
+ONDEWO_VTSI_VERSION=8.7.0
 
-VTSI_API_GIT_BRANCH=tags/8.6.0
+VTSI_API_GIT_BRANCH=tags/8.7.0
 # Must name the tag the committed ondewo-proto-compiler submodule points at, otherwise
 # check_out_correct_submodule_versions checks the submodule BACK to the older tag.
 ONDEWO_PROTO_COMPILER_GIT_BRANCH=tags/5.14.0
@@ -102,13 +102,22 @@ release: ## Create Github and NPM Release
 	git add api
 	git add Makefile
 	git add src
+# auth/ is the hand-written Keycloak provider and its spec, and README.md is a BUILD OUTPUT
+# (`make build` runs `cp src/README.md .`). Both are top-level, so `git add src` covers
+# neither: leaving them out publishes a change to npm while the git tag of that same version
+# does not contain it, and destroys anything written only in the root README on the next build.
+	git add auth
+	git add README.md
 	git add RELEASE.md
 	git add package.json
 	git add package-lock.json
 	git add ${ONDEWO_PROTO_COMPILER_DIR}
 	git add ${VTSI_APIS_DIR}
 	git status
-	git commit --no-verify -m "Preparing for Release ${ONDEWO_VTSI_VERSION}"
+# Tolerate an empty commit: when a release is re-run after its content was already committed
+# by hand, `git commit` exits 1 on a clean tree and would take the whole target -- npm
+# publish, branch, tag, GitHub release -- down with it. spc still refuses an existing tag.
+	-git commit --no-verify -m "Preparing for Release ${ONDEWO_VTSI_VERSION}"
 	git push
 	make publish_npm_via_docker
 	make create_release_branch
