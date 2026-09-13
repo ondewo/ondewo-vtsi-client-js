@@ -2,6 +2,26 @@
 
 *****************
 
+## Release ONDEWO VTSI Js Client 8.7.1
+
+### Bug Fixes
+
+* **The 8.7.0 bundle could not deserialize a single string field.** `api/ondewo_vtsi_api.js` is a
+  self-contained browser bundle: it embeds the `google-protobuf` runtime that was installed when it
+  was built. The proto compiler now emits `reader.readStringRequireUtf8()` (2142 call sites, zero in
+  8.6.0), and that method does not exist in `google-protobuf` 3.21.4 -- which `src/package.json`
+  pinned as `^3.21.4`, a range that can never resolve to the 4.x line where it was added. Any
+  `deserializeBinary` on a message with a string field threw
+  `TypeError: reader.readStringRequireUtf8 is not a function`.
+* The runtime pin is `^4.0.2` now and the bundle is rebuilt against it. Nothing else changed: the
+  generated message code is the same, and 8.7.0's proto content is unaffected.
+* **What made this shippable is that the defect lives only in the ARTEFACT.** The `.proto` sources,
+  the generated `_pb.js` and every source-level check were correct; only the bundle's embedded
+  runtime was wrong. `tests/asteriskVersion.spec.js` evaluates the shipped bundle in a `vm` and
+  round-trips a real message, which is the only check in this repository that could see it.
+
+*****************
+
 ## Release ONDEWO VTSI Js Client 8.7.0
 
 ### Improvements
