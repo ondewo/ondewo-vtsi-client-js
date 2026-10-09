@@ -122,3 +122,13 @@
 * [[OND211-2039]](https://ondewo.atlassian.net/browse/OND211-2039) - Added pre-commit hooks and adjusted files to them
 
 *****************
+
+## Release ONDEWO VTSI Js Client 1.0.0
+
+### Improvements
+
+* Initial VTSI Js client, built on ONDEWO VTSI API 1.0.0
+* Browser example adapted to the gRPC-web setter style; call ids are generated on the client (uuid)
+* Example settings and URLs loaded from a config file requested from a configurable server (template provided)
+
+*****************
