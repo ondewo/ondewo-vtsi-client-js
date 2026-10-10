@@ -2,6 +2,48 @@
 
 *****************
 
+## Release ONDEWO VTSI Js Client 8.7.2
+
+### Improvements
+
+* [[OND211-2443]](https://ondewo.atlassian.net/browse/OND211-2443) TLS: new `auth/grpcWebEndpoint.js`
+  (`buildGrpcWebEndpoint`) builds the gRPC-web endpoint URL for the generated clients per the ONDEWO TLS contract:
+  `https://` by default, plaintext `http://` only with `useSecureChannel: false`, which logs a `console.warn` naming
+  `host:port`. A bare IPv6 host is bracketed (`::1` becomes `https://[::1]:8443`), a `[...]` host is kept as given, and
+  a host carrying a scheme, a path or a port, a port outside 1..65535 or a non-boolean `useSecureChannel` is refused.
+* [[OND211-2443]](https://ondewo.atlassian.net/browse/OND211-2443) `grpcCert`, `grpcClientCert` and `grpcClientKey`
+  are refused with an error naming the option, never its value: a browser verifies the server against its own trust
+  store and presents a client certificate only from its own certificate store, and a private key must never be shipped
+  to a browser. Mutual TLS from a browser works with a client certificate installed in the browser / OS certificate
+  store, or with the gRPC-web proxy (Envoy) terminating TLS and using mutual TLS upstream.
+* [[OND211-2443]](https://ondewo.atlassian.net/browse/OND211-2443) `OfflineTokenProvider` gains `toJSON()` and a Node
+  `util.inspect` hook that render the access and refresh tokens as `***REDACTED***` (a token not yet set stays `null`),
+  so `JSON.stringify`, `console.log` and `util.inspect` of a provider never print a token.
+* [[OND211-2443]](https://ondewo.atlassian.net/browse/OND211-2443) README: new section "TLS, mutual TLS and
+  certificates" (modes, the Envoy mutual-TLS setup, why gRPC-web has no keepalive / backoff channel options, and the
+  Node.js SDK for mutual TLS from code with PEM files).
+* [[OND211-2443]](https://ondewo.atlassian.net/browse/OND211-2443) The published package now contains `auth/` (the
+  Keycloak `OfflineTokenProvider` and the new `grpcWebEndpoint`, without their specs): `create_npm_package` did not
+  copy it before, so earlier versions shipped no auth helper at all. Import it as
+  `require('@ondewo/ondewo-vtsi-client-js/auth/offlineTokenProvider')`; it is Node-only (it uses `undici`).
+
+### Build
+
+* Rebuilt with [ondewo-proto-compiler 5.15.2](https://github.com/ondewo/ondewo-proto-compiler/releases/tag/5.15.2)
+  (previous release: 5.14.0) against the unchanged API tag
+  [8.7.0](https://github.com/ondewo/ondewo-vtsi-api/releases/tag/8.7.0). No message or service changed; the embedded
+  `google-protobuf` 4.x runtime is refreshed.
+
+### Tests and release notes
+
+* `auth/grpcWebEndpoint.spec.js` and new `auth/offlineTokenProvider.spec.js` cases cover the endpoint builder and the
+  token redaction under the 100% coverage gate.
+* `tests/releaseNotes.spec.js` pins the Makefile's release-notes slice, every heading's spelling, one `*****`
+  separator per section and a non-empty slice for the released version.
+* RELEASE.md: added the 1.0.0 section (a tag without a release) from the tag's git history.
+
+*****************
+
 ## Release ONDEWO VTSI Js Client 8.7.1
 
 ### Bug Fixes
