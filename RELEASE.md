@@ -2,6 +2,80 @@
 
 *****************
 
+## Release ONDEWO VTSI Js Client 9.0.0
+
+### Breaking changes
+
+* [[OND233-367]](https://ondewo.atlassian.net/browse/OND233-367) Tracks
+  [ONDEWO VTSI API 9.0.0](https://github.com/ondewo/ondewo-vtsi-api/releases/tag/9.0.0) (was 8.7.0), a MAJOR
+  release that is binary wire-compatible in both directions and source-breaking:
+  * `AsteriskConfigsFiles.sip_conf_file_string` is renamed to `pjsip_conf_file_string` (same field number and
+    type). **Migration:** replace `getSipConfFileString()` / `setSipConfFileString()` with
+    `getPjsipConfFileString()` / `setPjsipConfFileString()`, and the `sipConfFileString` key of `toObject()` and of
+    any hand-written JSON mapping with `pjsipConfFileString`. The old accessors no longer exist, so a call to them
+    throws `TypeError: ... is not a function`.
+  * Eleven scalars in `calls.proto` gained explicit presence (`optional`):
+    `InterruptionHandlingConfig.transcribe_on_disabled_interruptions`,
+    `TurnDetectionConfig.turn_detection_system_prompt` and `.turn_detection_user_prompt`,
+    `AudioObjectStorageConfig.activate_audio_object_storage`,
+    `AudioObjectStorageServicesActivationConfig.activate_s2t` and `.activate_t2s`,
+    `MessageBrokerConfig.activate_message_broker`, and
+    `MessageBrokerServicesActivationConfig.activate_s2t`, `.activate_nlu`, `.activate_t2s` and `.activate_sip`.
+    Each gains `hasX()` / `clearX()`, and an explicitly set default (e.g. `setActivateS2t(false)`) is now sent on
+    the wire. **Migration:** use `hasX()` to tell "not set" from the default, and call `clearX()` instead of
+    setting the default when a field must stay unset.
+
+### New Features
+
+* [[OND233-367]](https://ondewo.atlassian.net/browse/OND233-367) New services in the bundle, each with a callback
+  client and a promise client (`<Service>Client`, `<Service>PromiseClient`):
+  * `Softphones` (`softphones.proto`): softphone SIP accounts with their own credentials, certificates and Zoiper
+    provisioning (`CreateSoftphoneAccount`, `GetSoftphoneAccount`, `UpdateSoftphoneAccount`,
+    `DeleteSoftphoneAccount`, `ListSoftphoneAccounts`, `RotateSoftphoneCredentials`, `ListSoftphoneCertificates`,
+    `GetSoftphoneCertificate`, `RevokeSoftphoneCertificate`, `GetSoftphoneProvisioning`). The SIP password and the
+    PKCS#12 bundle are returned only by `CreateSoftphoneAccount` and `RotateSoftphoneCredentials`.
+  * `Campaigns` (`campaigns.proto`): outbound call campaigns with a parallel-call limit and retries (CRUD,
+    `StartCampaign`, `StopCampaign`, `HardStopCampaign`, `ResumeCampaign`, `GetCampaignStatistics`,
+    `ListCampaignCalls`, and the server stream `StreamCampaignStatus`).
+  * `Events` (`events.proto`): VTSI events (`VtsiEvent`, `VtsiEventMessage`), event subscriptions and webhooks
+    (`Create/Get/Update/Delete/ListVtsiEventSubscription(s)`, `Create/Get/Update/Delete/ListWebhook(s)`,
+    `TestWebhook`) and the server stream `SubscribeVtsiEvents`. Custom webhook header values are write-only.
+* [[OND233-367]](https://ondewo.atlassian.net/browse/OND233-367) New `Calls` RPCs: `AddCallersToCampaign`,
+  `AddScheduledCallersToCampaign`, the status streams `StreamCallerStatus`, `StreamListenerStatus` and
+  `StreamScheduledCallerStatus`, and call control with `InviteToCall`, `RemoveCallParticipant`,
+  `SetCallMediaControl` and `ListenCallAudio` (listen-only live call audio, server stream). `StreamCallAudio` is
+  bidirectional streaming, which gRPC-web does not support, so the generated `CallsClient` has no method for it;
+  use a native gRPC client (e.g. the Node.js or Python SDK) to talk into a call.
+* [[OND233-367]](https://ondewo.atlassian.net/browse/OND233-367) New fields: answering machine detection
+  (`VoiceInteractionConfig.answering_machine_detection_config`, `AnsweringMachineDetectionConfig`, `AmdAction`,
+  `AmdSensitivity`; `Call.redial_recommended`, `redial_reason`, `answering_machine_detection_end_description`),
+  `idempotency_key` on the five batch-creating `Calls` requests, typed and truthful transfers
+  (`TransferCallRequest.target` / `mode` / `headers` / `ring_timeout_s`, `TransferCallResponse.outcome` and
+  more, `VtsiProject.transfer_phone_number_allowlist`), call-control state on `Call` (`media_control`,
+  `participants`, `last_transfer`, `sip_call_id`), and on `AsteriskConfigsVariables` the SIP trunk transport
+  (`sip_trunk_transport`, `sip_trunk_source_cidr`), carrier certificate verification
+  (`sip_trunk_ca_certificates_pem`, `sip_trunk_verify_server`) and `softphone_permit_cidrs`.
+* The vendored ondewo-sip-api moves from 5.4.0 to
+  [5.5.0](https://github.com/ondewo/ondewo-sip-api/releases/tag/5.5.0) (additive: answering machine detection,
+  call id, media control, transfer outcome); the nlu 7.1.0, s2t 7.5.0 and t2s 6.6.0 API pins are unchanged.
+* The supervision RPCs (`InviteToCall`, `SetCallMediaControl`, `ListenCallAudio`, `TransferCall` /
+  `TransferCalls`) require `PROJECT_DEVELOPER` or higher and the Keycloak auth mode `ENFORCE` on the server. See
+  the API release notes for the rolling-update behaviour of campaigns and idempotency keys.
+
+### Build
+
+* Regenerated with [ondewo-proto-compiler 5.15.5](https://github.com/ondewo/ondewo-proto-compiler/releases/tag/5.15.5)
+  (previous release: 5.15.2). The embedded `google-protobuf` runtime stays on the 4.x line (`^4.0.2`).
+
+### Tests
+
+* New `tests/vtsiApi9.spec.js` loads the shipped bundle and checks that `Softphones`, `Campaigns` and `Events`
+  have a callback and a promise client exposing every RPC, the new `Calls` RPCs, the `pjsip_conf_file_string`
+  rename, presence on a scalar that gained `optional`, and a multi-byte string round trip through the embedded
+  runtime. It fails on the 8.7.2 bundle (0 of 7 pass).
+
+*****************
+
 ## Release ONDEWO VTSI Js Client 8.7.2
 
 ### Improvements

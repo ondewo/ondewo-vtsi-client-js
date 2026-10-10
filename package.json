@@ -1,6 +1,6 @@
 {
   "name": "@ondewo/ondewo-vtsi-client-js",
-  "version": "8.7.2",
+  "version": "9.0.0",
   "description": "ONDEWO Voip Telephone System Integration (VTSI) Client library for Js",
   "author": "ONDEWO GmbH",
   "homepage": "https://ondewo.com",
@@ -25,7 +25,7 @@
     "build-sample": "docker run -v ${PWD}/src:/input-volume -v ${PWD}/src/../api:/output-volume $npm_package_config_compiler vtsi ondewo-vtsi-api ondewo-vtsi-api ondewo",
     "test:auth": "c8 --check-coverage --lines 100 --branches 100 --functions 100 --include auth/offlineTokenProvider.js --include auth/grpcWebEndpoint.js --exclude '**/*.spec.js' --reporter text node --test auth/offlineTokenProvider.spec.js auth/grpcWebEndpoint.spec.js",
     "test:examples": "node --test example/client.spec.js",
-    "test:protos": "node --test tests/asteriskVersion.spec.js",
+    "test:protos": "node --test tests/asteriskVersion.spec.js tests/vtsiApi9.spec.js",
     "test:release-notes": "node --test tests/releaseNotes.spec.js tests/releaseCredentials.spec.js"
   },
   "repository": {
