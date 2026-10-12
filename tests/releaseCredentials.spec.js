@@ -106,7 +106,10 @@ runTestCase('the devops release hands the credentials to the sub-make through it
 });
 
 runTestCase('no workflow interpolates a secret into a run line', () => {
-	const files = fs.existsSync(WORKFLOWS_DIR) ? fs.readdirSync(WORKFLOWS_DIR) : [];
+	let files = [];
+	if (fs.existsSync(WORKFLOWS_DIR)) {
+		files = fs.readdirSync(WORKFLOWS_DIR);
+	}
 	const leaking = files.flatMap((file) =>
 		fs
 			.readFileSync(path.join(WORKFLOWS_DIR, file), 'utf8')

@@ -97,6 +97,9 @@ release: ## Create Github and NPM Release
 	make install_precommit_hooks
 	make build
 	make check_build
+# Run the unit tests BEFORE anything is committed or published: the tests workflow only runs
+# after the push, by which time a broken package is already on npm.
+	npm test
 	make run_precommit_hooks
 	git status
 	git add api
