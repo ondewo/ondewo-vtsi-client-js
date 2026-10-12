@@ -9,6 +9,12 @@ jobs:
   unit-tests:
     runs-on: ubuntu-24.04
     steps:
+      # actions/checkout starts with a bare `git init`, and git then prints a multi-line
+      # "Using 'master' as the name for the initial branch" hint into every job log. Naming the
+      # default up front silences it; master is this repository's default branch anyway.
+      - name: Name git's default branch
+        run: git config --global init.defaultBranch master
+
       - uses: actions/checkout@v7
 
       - name: Set up Node.js 24
