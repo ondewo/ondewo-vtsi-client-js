@@ -1,6 +1,6 @@
 {
   "name": "@ondewo/ondewo-vtsi-client-js",
-  "version": "9.0.0",
+  "version": "9.1.0",
   "description": "ONDEWO Voip Telephone System Integration (VTSI) Client library for Js",
   "author": "ONDEWO GmbH",
   "homepage": "https://ondewo.com",
@@ -50,6 +50,6 @@
     "eslint": "^9.39.5",
     "global": "^4.4.0",
     "husky": "^9.1.7",
-    "prettier": "^3.9.9"
+    "prettier": "^3.9.10"
   }
 }
