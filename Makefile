@@ -66,6 +66,13 @@ NODE_PREREQ=$(if $(NODE_RUN),build_tools_docker_image)
 DEVOPS_ACCOUNT_GIT=ondewo-devops-accounts
 # Set by the release driver (ondewo-vtsi-api) to its own single clone; empty means clone one here.
 DEVOPS_ACCOUNT_DIR?=
+# Shell prefix for a recipe line that hands a token to a container: when a token is not already in the
+# environment and DEVOPS_ACCOUNT_DIR names a clone, read both from it (into the environment, never argv),
+# so release_preflight and release_verify also work standalone with only DEVOPS_ACCOUNT_DIR set.
+LOAD_CREDENTIALS=if [ -n "$(DEVOPS_ACCOUNT_DIR)" ] && { [ -z "$${GITHUB_GH_TOKEN:-}" ] || [ -z "$${NPM_AUTOMATION_TOKEN:-}" ]; }; then \
+		test -d "$(DEVOPS_ACCOUNT_DIR)" || { echo "DEVOPS_ACCOUNT_DIR=$(DEVOPS_ACCOUNT_DIR) is not a directory"; exit 1; }; \
+		set -a; eval "$$(grep -h -E '^(GITHUB_GH_TOKEN|NPM_AUTOMATION_TOKEN)=' "$(DEVOPS_ACCOUNT_DIR)/account_github.env" "$(DEVOPS_ACCOUNT_DIR)/account_npm.env")"; set +a; \
+	fi;
 .DEFAULT_GOAL := help
 
 ########################################################
@@ -172,10 +179,10 @@ release_preflight: ## Read-only. Fails before anything is built, committed or pu
 	if printf '%s\n' "$$versions" | perl -ne 'print "$$1\n" while /"([^"]+)"/g' | grep -Fxq "$(ONDEWO_VTSI_VERSION)"; then \
 		echo "release_preflight: npm already has $(NPM_PACKAGE)@$(ONDEWO_VTSI_VERSION)"; exit 1; \
 	fi
-	@docker run --rm \
+	@$(LOAD_CREDENTIALS) docker run --rm \
 		-e NPM_AUTOMATION_TOKEN \
 		$(IMAGE_TOOLS_NAME) make check_npm_credentials
-	@docker run --rm \
+	@$(LOAD_CREDENTIALS) docker run --rm \
 		-e GITHUB_GH_TOKEN \
 		$(IMAGE_TOOLS_NAME) make check_gh_credentials
 # The pushes go over SSH, not through the token: prove that the real `git push` would be accepted.
@@ -225,7 +232,7 @@ check_npm_published: $(NODE_PREREQ) ## Read-only. Fails unless npm serves the re
 release_verify: build_tools_docker_image check_npm_published ## Read-only. Fails unless origin has the tag, the GitHub release has notes and npm serves the version
 	@git ls-remote --exit-code --tags origin "refs/tags/$(ONDEWO_VTSI_VERSION)" >/dev/null \
 		|| { echo "origin has no tag $(ONDEWO_VTSI_VERSION)"; exit 1; }
-	@docker run --rm \
+	@$(LOAD_CREDENTIALS) docker run --rm \
 		-e GITHUB_GH_TOKEN \
 		$(IMAGE_TOOLS_NAME) make check_gh_release_notes
 	@echo "release_verify: OK"

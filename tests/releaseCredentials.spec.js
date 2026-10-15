@@ -312,3 +312,20 @@ runTestCase(
 		assert.deepEqual({ ...source.devDependencies, ...ci.devDependencies }, root.devDependencies);
 	}
 );
+
+runTestCase(
+	'release_preflight and release_verify load their tokens from DEVOPS_ACCOUNT_DIR when called standalone',
+	() => {
+		assert.match(MAKEFILE, /^LOAD_CREDENTIALS=if \[ -n "\$\(DEVOPS_ACCOUNT_DIR\)" \]/m);
+		for (const [target, count] of [
+			['release_preflight', 2],
+			['release_verify', 1]
+		]) {
+			const lines = recipeLines(target).filter((line) => line.includes('docker run'));
+			assert.equal(lines.length, count, target);
+			for (const line of lines) {
+				assert.ok(line.startsWith('@$(LOAD_CREDENTIALS) docker run'), `${target}: ${line}`);
+			}
+		}
+	}
+);
