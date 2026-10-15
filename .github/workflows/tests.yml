@@ -2,7 +2,11 @@ name: tests
 
 on:
   push:
-    branches: ['**']
+    branches:
+      - master
+      - 'release/**'
+    tags:
+      - '*'
   pull_request:
 
 jobs:
@@ -23,7 +27,7 @@ jobs:
           node-version: '24'
 
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       # The repo is ~95% generated gRPC/protobuf stubs; coverage is gated on the HAND-WRITTEN surface only
       # (the D18 Keycloak offline-token auth provider, auth/offlineTokenProvider.js). The test runs node's
