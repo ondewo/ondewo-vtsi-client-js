@@ -31,8 +31,9 @@ PRETTIER_WRITE?=
 
 NPM_PACKAGE=@ondewo/ondewo-vtsi-client-js
 NPM_REGISTRY=https://registry.npmjs.org/
-NPM_VERIFY_ATTEMPTS?=20
-NPM_VERIFY_INTERVAL_S?=30
+# The release driver (ondewo-vtsi-api) passes these to every client, so they keep the shared names.
+VERIFY_ATTEMPTS?=20
+VERIFY_INTERVAL_S?=30
 GH_REPO_SLUG=ondewo/ondewo-vtsi-client-js
 
 # Prints the RELEASE.md section of this version: the heading, anchored and with the version quoted
@@ -222,11 +223,11 @@ check_npm_published: $(NODE_PREREQ) ## Read-only. Fails unless npm serves the re
 		if test "$$($(NODE_RUN) npm view $(NPM_PACKAGE)@$(ONDEWO_VTSI_VERSION) version --registry $(NPM_REGISTRY) 2>/dev/null)" = "$(ONDEWO_VTSI_VERSION)"; then \
 			echo "npm serves $(NPM_PACKAGE)@$(ONDEWO_VTSI_VERSION)"; exit 0; \
 		fi; \
-		if test $$attempt -ge $(NPM_VERIFY_ATTEMPTS); then \
-			echo "$(NPM_PACKAGE)@$(ONDEWO_VTSI_VERSION) is not on npm after $(NPM_VERIFY_ATTEMPTS) attempts"; exit 1; \
+		if test $$attempt -ge $(VERIFY_ATTEMPTS); then \
+			echo "$(NPM_PACKAGE)@$(ONDEWO_VTSI_VERSION) is not on npm after $(VERIFY_ATTEMPTS) attempts"; exit 1; \
 		fi; \
-		echo "npm does not serve $(NPM_PACKAGE)@$(ONDEWO_VTSI_VERSION) yet (attempt $$attempt/$(NPM_VERIFY_ATTEMPTS))"; \
-		attempt=$$((attempt + 1)); sleep $(NPM_VERIFY_INTERVAL_S); \
+		echo "npm does not serve $(NPM_PACKAGE)@$(ONDEWO_VTSI_VERSION) yet (attempt $$attempt/$(VERIFY_ATTEMPTS))"; \
+		attempt=$$((attempt + 1)); sleep $(VERIFY_INTERVAL_S); \
 	done
 
 release_verify: build_tools_docker_image check_npm_published ## Read-only. Fails unless origin has the tag, the GitHub release has notes and npm serves the version

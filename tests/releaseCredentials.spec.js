@@ -329,3 +329,19 @@ runTestCase(
 		}
 	}
 );
+
+runTestCase("npm polling honours the driver's VERIFY_ATTEMPTS and VERIFY_INTERVAL_S", () => {
+	assert.match(MAKEFILE, /^VERIFY_ATTEMPTS\?=\d+$/m);
+	assert.match(MAKEFILE, /^VERIFY_INTERVAL_S\?=\d+$/m);
+	const recipe = recipeOf('check_npm_published');
+	assert.ok(recipe.includes('-ge $(VERIFY_ATTEMPTS)'));
+	assert.ok(recipe.includes('sleep $(VERIFY_INTERVAL_S)'));
+	assert.ok(recipeOf('release_verify').startsWith('release_verify: build_tools_docker_image check_npm_published'));
+	const output = execFileSync(
+		'make',
+		['-s', '-n', 'check_npm_published', 'VERIFY_ATTEMPTS=3', 'VERIFY_INTERVAL_S=10', 'NODE_RUN='],
+		{ cwd: REPO_ROOT, encoding: 'utf8', env: { ...process.env, MAKEFLAGS: '' } }
+	);
+	assert.match(output, /-ge 3;/);
+	assert.match(output, /sleep 10;/);
+});
