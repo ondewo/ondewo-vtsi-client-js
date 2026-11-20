@@ -123,6 +123,8 @@ check_build: ## Checks if all built proto-code is there
 		echo $${proto} | cut -d "/" -f 3-5 | cut -d "." -f 1 >> build_check.txt; \
 	done
 	@echo "`sort build_check.txt | uniq`" > build_check.txt
+# A proto in CODEGEN_EXCLUDED_PROTOS is left out of the bundle on purpose, so it is not expected in it.
+	@$(foreach proto,$(patsubst %.proto,%,${CODEGEN_EXCLUDED_PROTOS}),{ grep -vxF '$(proto)' build_check.txt > build_check.tmp || true; } && mv build_check.tmp build_check.txt;)
 	@for file in `cat build_check.txt`;\
 	do \
 		cat api/ondewo_vtsi_api.js | grep -q $${file};\
