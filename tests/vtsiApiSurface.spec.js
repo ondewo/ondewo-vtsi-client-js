@@ -161,6 +161,18 @@ runTestCase('no client exposes a client-streaming or bidirectional RPC, which gR
 	assert.deepEqual(exposed, []);
 });
 
+runTestCase('the global LogsClient is the ondewo.vtsi.Logs client and the bundle carries no ondewo.nlu.Logs', () => {
+	// ondewo-nlu-api 7.6.0 declares a second `service Logs`. The bundle's entry point star-exports every stub
+	// in file-system order, and a later module overwrites an earlier one's names, so which LogsClient the
+	// global held was an accident of that order. The Makefile keeps ondewo/nlu/logs.proto out of the codegen
+	// (CODEGEN_EXCLUDED_PROTOS).
+	const api = loadApiBundle();
+	for (const flavour of ['LogsClient', 'LogsPromiseClient']) {
+		assert.match(String(api[flavour].prototype.listCallLogs), /\/ondewo\.vtsi\.Logs\/ListCallLogs/);
+	}
+	assert.equal(fs.readFileSync(BUNDLE_PATH, 'utf8').includes('/ondewo.nlu.Logs/'), false);
+});
+
 runTestCase('AsteriskConfigsFiles.sip_conf_file_string is renamed to pjsip_conf_file_string', () => {
 	const api = loadApiBundle();
 	const files = new api.AsteriskConfigsFiles();

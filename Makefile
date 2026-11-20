@@ -23,6 +23,11 @@ ONDEWO_PROTO_COMPILER_DIR=ondewo-proto-compiler
 VTSI_APIS_DIR=src/ondewo-vtsi-api
 VTSI_PROTOS_DIR=${VTSI_APIS_DIR}/ondewo
 GOOGLE_PROTOS_DIR=${VTSI_APIS_DIR}/google
+# Vendored protos (paths under ${VTSI_APIS_DIR}) left out of the codegen. ondewo/nlu/logs.proto
+# declares a second `service Logs`, and the barrel `export *`s both stubs, so the root name LogsClient
+# (and LogsPromiseClient) is ambiguous and ends up bound by module order, not to this client's
+# ondewo.vtsi service. No compiled proto imports it; @ondewo/nlu-client-js ships it.
+CODEGEN_EXCLUDED_PROTOS=ondewo/nlu/logs.proto
 GITHUB_GH_TOKEN?=
 NPM_AUTOMATION_TOKEN?=
 IMAGE_UTILS_NAME=ondewo-vtsi-client-utils-js:${ONDEWO_VTSI_VERSION}
@@ -381,7 +386,9 @@ check_out_correct_submodule_versions: ## Fetches all Submodules and checksout sp
 # writes api/ as root; the second container hands it back to the invoking user (no sudo on the host).
 npm_run_build: ## Generates api/ from the protos of src/ondewo-vtsi-api with the proto-compiler image
 	@echo "START npm run build ..."
-	docker run --rm -v "$(CURDIR)/src":/input-volume -v "$(CURDIR)/api":/output-volume ondewo-js-proto-compiler ondewo-vtsi-api ondewo-vtsi-api ondewo
+	# The excluded protos leave the input tree for the codegen run only; the EXIT trap restores them
+	# from git whatever the outcome, and the shell still exits with the codegen's status.
+	trap 'git -C ${VTSI_APIS_DIR} checkout -- ${CODEGEN_EXCLUDED_PROTOS}' EXIT; rm -f $(addprefix ${VTSI_APIS_DIR}/,${CODEGEN_EXCLUDED_PROTOS}); docker run --rm -v "$(CURDIR)/src":/input-volume -v "$(CURDIR)/api":/output-volume ondewo-js-proto-compiler ondewo-vtsi-api ondewo-vtsi-api ondewo
 	docker run --rm -v "$(CURDIR)/api":/output-volume --entrypoint chown ondewo-js-proto-compiler -R "$$(id -u):$$(id -g)" /output-volume
 	@echo "DONE npm run build."
 
