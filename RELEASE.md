@@ -2,6 +2,15 @@
 
 *****************
 
+## Release ONDEWO VTSI Js Client 9.5.0
+
+### Improvements
+
+* Tracking API Version [9.5.0](https://github.com/ondewo/ondewo-vtsi-api/releases/tag/9.5.0) ( [Documentation](https://ondewo.github.io/ondewo-vtsi-api/) )
+* Generated with ondewo-proto-compiler 5.17.0 (protoc 35.1, `protoc-gen-grpc-web` 2.1.1). New runtime floors: `grpc-web ^2.1.1` and `google-protobuf ^4.0.3`; grpc-web 2.1.1 limits a response to 4 MB by default, set `maxReceiveMessageSize` to receive more.
+
+*****************
+
 ## Release ONDEWO VTSI Js Client 9.3.0
 
 ### Improvements
